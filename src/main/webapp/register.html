@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎注册</title>
+    <link href="css/register.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="registerDiv" class="form-div">
+    <div class="reg-content">
+        <h1>欢迎注册</h1>
+        <span>已有帐号？</span> <a href="login.html">登录</a>
+    </div>
+    <form id="reg-form" :model="user">
+
+        <table>
+
+            <tr>
+                <td>用户名</td>
+                <td class="inputs">
+                    <input name="username" v-model="user.userName" type="text" id="username">
+                    <br>
+                    <span id="username_err" class="err_msg" style="display: none">用户名不太受欢迎</span>
+                </td>
+
+            </tr>
+
+            <tr>
+                <td>密码</td>
+                <td class="inputs">
+                    <input name="password" v-model="user.password" type="password" id="password">
+                    <br>
+                    <span id="password_err" class="err_msg">{{register_msg}}</span>
+                </td>
+            </tr>
+
+
+            <tr>
+                <td>验证码</td>
+                <td class="inputs">
+                    <input name="checkCode" v-model="code" type="text" id="checkCode">
+                    <img id="checkCodeImg" src="">
+                    <a href="#" @click="checkCode" id="changeImg">看不清？</a>
+                </td>
+            </tr>
+
+        </table>
+
+        <div class="buttons">
+            <input value="注 册" @click="register" type="button" id="reg_btn">
+        </div>
+        <br class="clear">
+    </form>
+
+</div>
+
+
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<script src="js/axios-0.18.0.js"></script>
+
+<script>
+
+    new Vue({
+        el: '#registerDiv',
+        data() {
+            return {
+                user: {},
+                code: '',
+                register_msg: ''
+            }
+        },
+        mounted() {
+            document.getElementById("checkCodeImg").src = "/myFavoriteWorks/user/checkCode";
+        },
+        methods: {
+            register() {
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8080/myFavoriteWorks/user/register?checkCode=' + this.code,
+                    data: this.user
+                }).then(resp => {
+                    if (resp.data == "success") {
+                        window.location.href = 'http://localhost:8080/myFavoriteWorks/login.html';
+                    } else if(resp.data == "check_msg") {
+                        this.register_msg = '验证码错误';
+                    } else {
+                        this.register_msg = '注册失败';
+                    }
+                })
+            },
+            checkCode() {
+                document.getElementById("checkCodeImg").src = '/myFavoriteWorks/user/checkCode?' + new Date().getMilliseconds();
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>

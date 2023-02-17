@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+
+        <!--
+        作品表格的样式
+
+        -->
+        .el-table .warning-row {
+            background: oldlace;
+        }
+
+        .el-table .success-row {
+            background: #f0f9eb;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+
+    <!--多条件查询表单 -->
+    <el-form :inline="true" :model="work" class="demo-form-inline">
+        <el-form-item label="作品名">
+            <el-input v-model="work.workName"></el-input>
+        </el-form-item>
+        <el-form-item label="作者名">
+            <el-input v-model="work.writer"></el-input>
+        </el-form-item>
+        <el-form-item label="作品类型">
+            <el-select v-model="value" placeholder="请选择">
+                <el-option
+                        v-for="item in options"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                </el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item label="作品题材">
+            <el-checkbox-group
+                    v-model="checkedThemes"
+                    :min="0"
+                    :max="3">
+                <el-checkbox v-for="theme in themes" :label="theme" :key="theme">{{theme}}</el-checkbox>
+            </el-checkbox-group>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="selectWorkByPageAndCondition">查询</el-button>
+        </el-form-item>
+    </el-form>
+
+    <!--批量删除、新增按钮 -->
+    <el-row>
+        <el-button type="primary" plain @click="dialogVisible = true">新增</el-button>
+    </el-row>
+
+    <!--新增对话框 -->
+    <el-dialog
+            title="添加作品"
+            :visible.sync="dialogVisible"
+            width="30%">
+
+        <!--新增form表单 -->
+        <el-form ref="form" :model="work" label-width="80px">
+            <el-form-item label="作品名">
+                <el-input v-model="work.workName"></el-input>
+            </el-form-item>
+            <el-form-item label="作者名">
+                <el-input v-model="work.writer"></el-input>
+            </el-form-item>
+            <el-form-item label="作品类型">
+                <el-select v-model="value" placeholder="请选择">
+                    <el-option
+                            v-for="item in options"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="作品题材">
+                <el-checkbox-group
+                        v-model="checkedThemes"
+                        :min="1"
+                        :max="3">
+                    <el-checkbox v-for="theme in themes" :label="theme" :key="theme">{{theme}}</el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+            <el-form-item label="作品描述">
+                <el-input type="textarea" v-model="work.workDescription"></el-input>
+            </el-form-item>
+
+            <el-form-item>
+                <el-button type="primary" @click="addWork">提交</el-button>
+                <el-button @click="dialogVisible = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+    <!--作品表格 -->
+    <template>
+        <el-table
+                :data="works"
+                style="width: 100%"
+                :row-class-name="tableRowClassName">
+            <el-table-column
+                    prop="workName"
+                    label="作品名"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="writer"
+                    label="作者名"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="type"
+                    label="作品类型"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="theme"
+                    label="作品题材"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="workDescription"
+                    label="作品描述"
+                    align="center">
+                <el-link type="success">查看详情</el-link>
+            </el-table-column>
+            <el-table-column
+                    label="操作"
+                    align="center">
+                <template slot-scope="scope">
+                    <el-row>
+                        <el-button type="primary" @click="deleteWork(scope.row)" round>删除</el-button>
+                        <el-button type="danger" @click="selectWorkById(scope.row)" round>修改</el-button>
+                    </el-row>
+                </template>
+            </el-table-column>
+        </el-table>
+    </template>
+
+    <!--修改对话框 -->
+    <el-dialog
+            title="修改作品"
+            :visible.sync="dialogVisible2"
+            width="30%">
+
+        <!--修改form表单 -->
+        <el-form ref="form" :model="work" label-width="80px">
+            <el-form-item label="作品名">
+                <el-input v-model="work.workName"></el-input>
+            </el-form-item>
+            <el-form-item label="作者名">
+                <el-input v-model="work.writer"></el-input>
+            </el-form-item>
+            <el-form-item label="作品类型">
+                <el-select v-model="value" placeholder="请选择">
+                    <el-option
+                            v-for="item in options"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="作品题材">
+                <el-checkbox-group
+                        v-model="checkedThemes"
+                        :min="1"
+                        :max="3">
+                    <el-checkbox v-for="theme in themes" :label="theme" :key="theme">{{theme}}</el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+            <el-form-item label="作品描述">
+                <el-input type="textarea" v-model="work.workDescription"></el-input>
+            </el-form-item>
+
+            <el-form-item>
+                <el-button type="primary" @click="updateWork">提交</el-button>
+                <el-button @click="dialogVisible2 = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+    <!--分页 -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[5, 10, 15, 20]"
+            :page-size="pageCount"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalCount">
+    </el-pagination>
+</div>
+
+
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<script src="js/axios-0.18.0.js"></script>
+
+<script>
+
+    const themeOptions = ['剧情', '悬疑', '推理', '青春', '科幻', '奇幻', '冒险'];
+
+    new Vue({
+        el: "#app",
+        mounted() {
+            this.selectWorkByPageAndCondition();
+        },
+        methods: {
+            tableRowClassName({row, rowIndex}) {
+                if (rowIndex % 2 == 0) {
+                    return 'warning-row';
+                } else if (rowIndex % 2 == 1) {
+                    return 'success-row';
+                }
+                return '';
+            },
+            //分页有关的方法
+            handleSizeChange(val) {
+                this.pageCount = val;
+                this.selectWorkByPageAndCondition();
+            },
+            handleCurrentChange(val) {
+                this.currentPage = val;
+                this.selectWorkByPageAndCondition();
+            },
+            //查询方法
+            selectWorkByPageAndCondition() {
+
+                this.work.type = this.value;
+                this.work.themes = this.checkedThemes;
+
+                axios({
+                    method: "post",
+                    url: "http://localhost:8080/myFavoriteWorks/work/select?currentPage=" + this.currentPage + "&pageCount=" + this.pageCount,
+                    data: this.work
+                }).then(resp => {
+                    this.works = resp.data.rows;
+                    this.totalCount = resp.data.totalCount;
+                });
+            },
+            //新增方法
+            addWork() {
+
+                //表单验证
+                if (this.work.workName == null || this.work.writer == null
+                    || this.work.workDescription == null || this.value == null
+                    || this.checkedThemes == null) {
+                    alert("请正确填写各项信息");
+                    return;
+                }
+
+                this.work.type = this.value;
+                this.work.themes = this.checkedThemes;
+
+                //向服务器发送请求
+                axios({
+                    method: "post",
+                    url: "http://localhost:8080/myFavoriteWorks/work/add",
+                    data: this.work
+                }).then(resp => {
+                    this.work = {};
+                    this.dialogVisible = false;
+                    if (resp.data == "success") {
+                        this.selectWorkByPageAndCondition();
+                        this.$message({
+                            message: '添加成功',
+                            type: 'success'
+                        });
+                    } else {
+                        this.$message({
+                            message: '添加失败',
+                            type: 'warning'
+                        });
+                    }
+                });
+            },
+            //单个删除
+            deleteWork(row) {
+
+                this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/myFavoriteWorks/work/delete?wid=' + row.wid
+                    }).then(resp => {
+                        if (resp.data == "success") {
+                            this.selectWorkByPageAndCondition();
+                            this.$message({
+                                message: '删除成功',
+                                type: 'success'
+                            });
+                        } else {
+                            this.$message({
+                                message: '删除失败',
+                                type: 'warning'
+                            });
+                        }
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消删除'
+                        });
+                    });
+                });
+            },
+            //修改作品
+            selectWorkById(row) {
+                this.dialogVisible2 = true;
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8080/myFavoriteWorks/work/selectOne?wid=' + row.wid
+                }).then(resp => {
+                    this.work = resp.data;
+                    this.value = this.work.type;
+                    let split = this.work.theme.split("  ");
+
+                    for (let i = 0, j = 0; i < split.length; i++) {
+                        if (split[i].trim().length != 0) {
+                            console.log(split[i].trim());
+                            this.checkedThemes[j] = split[i].trim();
+                            j++;
+                        }
+                    }
+                })
+            },
+            updateWork() {
+
+                this.work.type = this.value;
+                this.work.themes = this.checkedThemes;
+
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8080/myFavoriteWorks/work/update',
+                    data: this.work
+                }).then(resp =>{
+                    this.dialogVisible2 = false;
+                    this.checkedThemes = [];
+                    this.work = {};
+                    if (resp.data == "success") {
+                        this.selectWorkByPageAndCondition();
+                        this.$message({
+                            message: '修改成功',
+                            type: 'success'
+                        });
+                    } else {
+                        this.$message({
+                            message: '修改失败',
+                            type: 'warning'
+                        });
+                    }
+                })
+            }
+        },
+        data() {
+            return {
+
+                work: {},
+                //作品信息
+                works: [],
+                //多条件查询信息
+                formInline: {
+                    user: '',
+                    region: ''
+                },
+                //复选框信息
+                checkedThemes: [],
+                themes: themeOptions,
+                //分页相关数据
+                currentPage: 1,
+                pageCount: 5,
+                totalCount: 100,
+                //对话框开关
+                dialogVisible: false,
+                dialogVisible2: false,
+                options: [{
+                    value: '音乐',
+                    label: '音乐'
+                }, {
+                    value: '电影',
+                    label: '电影'
+                }, {
+                    value: '动画',
+                    label: '动画'
+                }, {
+                    value: '小说',
+                    label: '小说'
+                }, {
+                    value: '电视剧',
+                    label: '电视剧'
+                }, {
+                    value: '游戏',
+                    label: '游戏'
+                }],
+                value: ''
+            }
+        }
+    })
+</script>
+
+</body>
+</html>

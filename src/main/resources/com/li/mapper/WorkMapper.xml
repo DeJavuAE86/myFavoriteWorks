@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.li.mapper.WorkMapper">
+
+    <resultMap id="workResultMap" type="work">
+        <result column="work_name" property="workName"></result>
+        <result column="theme" property="themeStr"></result>
+        <result column="work_description" property="workDescription"></result>
+    </resultMap>
+    <!--<foreach>和</foreach>中间不能存在自己手动敲的空格之类的字符 -->
+    <insert id="insertWork">
+        insert into work values (null , #{workName}, #{writer}, #{type},<foreach collection="themes" item="theme" separator=";" open="&apos;" close="&apos;,">${theme}</foreach>
+         #{workDescription}, #{content});
+    </insert>
+
+    <update id="updateWork">
+        update work set work_name = #{workName}, writer = #{writer},
+                        type = #{type}, theme = <foreach collection="themes" item="theme" separator=";" open="&apos;" close="&apos;,">${theme}</foreach>
+                        work_description = #{workDescription}, content = #{content}
+                        where wid = #{wid};
+    </update>
+
+    <delete id="deleteWorkByWid">
+        delete from work where wid = #{wid};
+    </delete>
+    <delete id="deleteWorksByIds">
+        delete from work where wid in
+        <foreach collection="ids" item="wid" separator="," open="(" close=")">
+            #{wid}
+        </foreach>
+    </delete>
+
+    <select id="selectAllWork" resultMap="workResultMap">
+        select * from work;
+    </select>
+    <select id="selectWorksByPageAndCondition" resultMap="workResultMap">
+        select * from work
+        <where>
+            <if test="work.workName != null and work.workName != ''">
+                and work_name like #{work.workName}
+            </if>
+            <if test="work.writer != null and work.writer != ''">
+                and writer like #{work.writer}
+            </if>
+            <if test="work.type != null and work.type != ''">
+                and type = #{work.type}
+            </if>
+            <if test="work.themes !=null and work.themes.length > 0">
+                and
+                <foreach collection="work.themes" item="theme" separator=" or " open="(" close=")" >
+                    theme like #{theme}
+                </foreach>
+            </if>
+        </where>
+        limit #{begin}, #{count};
+    </select>
+    <select id="selectWorkCountByCondition" resultType="java.lang.Integer">
+        select count(*) from work
+        <where>
+            <if test="workName != null and workName != ''">
+                and work_name like #{workName}
+            </if>
+            <if test="writer != null and writer != ''">
+                and writer like #{writer}
+            </if>
+            <if test="type != null and type != ''">
+                and type = #{type}
+            </if>
+            <if test="themes !=null and themes.length > 0">
+                and
+                <foreach collection="themes" item="theme" separator=" or " open="(" close=")" >
+                    theme like #{theme}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="selectWorkByWid" resultMap="workResultMap">
+        select * from work where wid = #{wid};
+    </select>
+</mapper>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link href="css/login.css" rel="stylesheet">
+</head>
+
+<body>
+<div id="loginDiv" style="height: 350px">
+    <form :model="user" id="form">
+        <h1 id="loginMsg">LOGIN IN</h1>
+        <div id="errorMsg">{{login_msg}}</div>
+        <p>Username:<input id="username" v-model="user.userName" name="username" type="text"></p>
+
+        <p>Password:<input id="password" v-model="user.password" name="password" type="password"></p>
+        <p>Remember:<input id="remember" name="remember" type="checkbox"></p>
+        <div id="subDiv">
+            <input type="button" @click="login" class="button" value="login up">
+            <input type="reset" class="button" value="reset">&nbsp;&nbsp;&nbsp;
+            <a href="register.html">没有账号？</a>
+        </div>
+    </form>
+</div>
+
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<script src="js/axios-0.18.0.js"></script>
+
+<script>
+
+    new Vue({
+        el: '#loginDiv',
+        data() {
+            return {
+                user: {},
+                login_msg: "",
+            }
+        },
+        methods: {
+            login() {
+                axios({
+                    method: 'post',
+                    url: 'http://localhost:8080/myFavoriteWorks/user/login',
+                    data: this.user
+                }).then(resp =>{
+                    if (resp.data == "success") {
+                        window.location.href = 'http://localhost:8080/myFavoriteWorks/work.html';
+                    } else {
+                        this.login_msg = '账号或密码错误';
+                    }
+                })
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>
